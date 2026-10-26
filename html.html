@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>You Have $1,000: Animal Bodyguard Showdown</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bitter:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E2D3AC; --surface:#F1E7CC; --surface-2:#E9DBB6; --ink:#2A2216; --muted:#5E5240;
+  --line:#BFA97A; --accent:#B8741A; --good:#3F5A22; --bad:#9E2F1C;
+  --t400:#D9A520; --t300:#D9701E; --t200:#B8322A; --t100:#62788F; --on-tier:#1E1810;
+  --sel:#2A2216; --sel-ink:#F1E7CC;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#1B1811; --surface:#27221A; --surface-2:#312A1F; --ink:#EDE3CB; --muted:#B4A68A;
+    --line:#4A4030; --accent:#E3A34A; --good:#9DC46A; --bad:#EE7A63;
+    --t400:#E2B23A; --t300:#E4823A; --t200:#D2554B; --t100:#8DA2B8; --on-tier:#15110B;
+    --sel:#EDE3CB; --sel-ink:#1B1811; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1B1811; --surface:#27221A; --surface-2:#312A1F; --ink:#EDE3CB; --muted:#B4A68A;
+  --line:#4A4030; --accent:#E3A34A; --good:#9DC46A; --bad:#EE7A63;
+  --t400:#E2B23A; --t300:#E4823A; --t200:#D2554B; --t100:#8DA2B8; --on-tier:#15110B;
+  --sel:#EDE3CB; --sel-ink:#1B1811; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Bitter,Georgia,"Times New Roman",serif;font-size:16px;line-height:1.5}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto;padding:20px 16px 48px}
+
+/* header: the budget is the hero */
+.hero{display:grid;grid-template-columns:1fr auto;gap:8px 24px;align-items:end;border-bottom:4px solid var(--ink);padding-bottom:14px;margin-bottom:22px}
+.hero h1{margin:0;font-family:Anton,Impact,"Arial Narrow Bold",sans-serif;font-weight:400;font-size:clamp(2.6rem,8vw,5.6rem);line-height:.92;letter-spacing:.01em}
+.hero p{margin:6px 0 0;color:var(--muted);max-width:58ch}
+.purse{text-align:right}
+.purse .amt{font-family:Anton,Impact,sans-serif;font-size:clamp(2.6rem,8vw,5.6rem);line-height:.92;color:var(--accent);font-variant-numeric:tabular-nums;transition:color .2s}
+.purse .amt.zero{color:var(--muted)}
+.purse .lbl{color:var(--muted);font-size:.9rem}
+@media (max-width:640px){.hero{grid-template-columns:1fr}.purse{text-align:left}}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}
+@media (max-width:960px){.layout{grid-template-columns:1fr}}
+
+/* roster */
+.tier{display:grid;grid-template-columns:56px minmax(0,1fr);margin-bottom:12px}
+.band{display:flex;align-items:center;justify-content:center;color:var(--on-tier);font-family:Anton,Impact,sans-serif;font-size:2rem}
+.band span{writing-mode:vertical-rl;transform:rotate(180deg)}
+.tier[data-t="400"] .band{background:var(--t400)}
+.tier[data-t="300"] .band{background:var(--t300)}
+.tier[data-t="200"] .band{background:var(--t200)}
+.tier[data-t="100"] .band{background:var(--t100)}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding-left:8px}
+@media (max-width:1100px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:460px){.tier{grid-template-columns:40px minmax(0,1fr)}.band{font-size:1.5rem}.cards{grid-template-columns:1fr}}
+.card{position:relative;text-align:left;background:var(--surface);border:2px solid var(--line);padding:12px 12px 10px;cursor:pointer;display:flex;flex-direction:column;gap:6px;min-height:100%}
+.card:hover{border-color:var(--ink)}
+.card[aria-pressed="true"]{background:var(--sel);color:var(--sel-ink);border-color:var(--sel)}
+.card[aria-pressed="true"] .card-stats dt,.card[aria-pressed="true"] .prof{color:inherit;opacity:.78}
+.card:disabled{cursor:not-allowed;opacity:.42}
+.card h3{margin:0;font-family:Anton,Impact,sans-serif;font-weight:400;font-size:1.35rem;line-height:1.05;letter-spacing:.01em;padding-right:26px}
+.tick{position:absolute;top:10px;right:10px;width:20px;height:20px;border:2px solid currentColor;display:grid;place-items:center;font-size:.8rem;line-height:1}
+.card-stats{display:grid;grid-template-columns:auto 1fr;gap:1px 8px;margin:0;font-size:.8rem;line-height:1.35}
+.card-stats dt{color:var(--muted)}
+.card-stats dd{margin:0}
+.prof{font-size:.78rem;font-style:italic;color:var(--muted);line-height:1.35;margin:2px 0 0}
+.fight-nums{margin-top:auto;padding-top:6px;border-top:1px dashed currentColor;font-size:.78rem;display:flex;gap:12px;font-variant-numeric:tabular-nums}
+
+/* side panel */
+.panel{position:sticky;top:calc(12px + env(safe-area-inset-top,0px));background:var(--surface);border:2px solid var(--ink);padding:16px}
+@media (max-width:960px){.panel{position:static}}
+.panel h2{margin:0 0 8px;font-family:Anton,Impact,sans-serif;font-weight:400;font-size:1.6rem;line-height:1}
+.team-list{list-style:none;margin:0 0 12px;padding:0;min-height:1.5em}
+.team-list li{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid var(--line)}
+.team-list .empty{color:var(--muted);font-style:italic;border:0}
+.team-list button{background:none;border:0;padding:0 2px;cursor:pointer;color:var(--muted);text-decoration:underline;font-size:.85rem}
+fieldset{border:0;margin:14px 0;padding:0}
+legend{font-weight:700;margin-bottom:6px;padding:0}
+.terrain{display:grid;gap:6px}
+.terrain label{display:flex;gap:8px;align-items:flex-start;padding:8px;border:1px solid var(--line);cursor:pointer;font-size:.9rem;line-height:1.35}
+.terrain label:has(input:checked){border-color:var(--ink);background:var(--surface-2)}
+.terrain small{display:block;color:var(--muted)}
+.terrain input{margin-top:3px;accent-color:var(--accent)}
+.btn{display:block;width:100%;padding:12px;border:2px solid var(--ink);background:var(--ink);color:var(--bg);font-family:Anton,Impact,sans-serif;font-size:1.25rem;letter-spacing:.02em;cursor:pointer;margin-top:8px}
+.btn.alt{background:transparent;color:var(--ink)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.hint{font-size:.85rem;color:var(--muted);margin:8px 0 0}
+.odds{margin-top:14px;padding-top:12px;border-top:2px solid var(--ink);display:none}
+.odds.show{display:block}
+.odds .pct{font-family:Anton,Impact,sans-serif;font-size:3.4rem;line-height:1;font-variant-numeric:tabular-nums}
+.odds p{margin:4px 0 0;font-size:.88rem}
+
+/* report */
+.report{margin-top:28px;display:none}
+.report.show{display:block}
+.verdict{padding:16px 18px;color:#FFF8E8;margin-bottom:14px}
+.verdict.win{background:var(--good)}
+.verdict.lose{background:var(--bad)}
+:root[data-theme="dark"] .verdict, :root:not([data-theme="light"]) .verdict{color:#FFF8E8}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .verdict.win{background:#3F5A22}:root:not([data-theme="light"]) .verdict.lose{background:#8E2A19}}
+:root[data-theme="dark"] .verdict.win{background:#3F5A22}
+:root[data-theme="dark"] .verdict.lose{background:#8E2A19}
+.verdict h2{margin:0;font-family:Anton,Impact,sans-serif;font-weight:400;font-size:clamp(2rem,6vw,3.2rem);line-height:1}
+.verdict p{margin:6px 0 0}
+.pending{padding:16px 18px;border:2px dashed var(--line);margin-bottom:14px;color:var(--muted)}
+.bars{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px 16px;margin-bottom:18px}
+.bar{font-size:.85rem}
+.bar .track{height:10px;background:var(--surface-2);border:1px solid var(--line);margin-top:3px}
+.bar .fill{height:100%;background:var(--good);transition:width .3s}
+.bar.dead .fill{background:var(--bad)}
+.log-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.log-head h3{margin:0;font-family:Anton,Impact,sans-serif;font-weight:400;font-size:1.5rem}
+.skip{background:none;border:0;text-decoration:underline;cursor:pointer;color:var(--muted)}
+.rounds{list-style:none;margin:10px 0 0;padding:0;max-width:75ch}
+.rounds > li{border-left:4px solid var(--line);padding:4px 0 8px 12px;margin-bottom:6px}
+.rounds h4{margin:0 0 2px;font-size:.95rem}
+.rounds ul{margin:0;padding:0;list-style:none;font-size:.9rem}
+.rounds ul li{padding:1px 0}
+.e-arrive{color:var(--muted)}
+.e-flee{color:var(--good)}
+.e-chaos{color:var(--accent)}
+.e-rogue,.e-down-team,.e-lose{color:var(--bad);font-weight:600}
+.e-down-enemy{font-weight:600}
+details.how{margin-top:32px;max-width:75ch;border-top:2px solid var(--ink);padding-top:12px}
+details.how summary{cursor:pointer;font-family:Anton,Impact,sans-serif;font-size:1.4rem}
+details.how p,details.how li{font-size:.95rem}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <div>
+      <h1>You have $1,000</h1>
+      <p>Build a team to protect you from the rest. Every animal you don’t buy comes after you. Pick your bodyguards, choose the ground, and see if you walk away.</p>
+    </div>
+    <div class="purse" aria-live="polite">
+      <div class="amt" id="amt">$1,000</div>
+      <div class="lbl">left to spend</div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <main id="roster" aria-label="Animals for hire"></main>
+
+    <aside class="panel" aria-label="Your team">
+      <h2>Your team</h2>
+      <ul class="team-list" id="teamList"></ul>
+      <fieldset>
+        <legend>Where’s the fight?</legend>
+        <div class="terrain" id="terrain"></div>
+      </fieldset>
+      <button class="btn" id="runBtn" disabled>Run the fight</button>
+      <button class="btn alt" id="simBtn" disabled>Simulate 1,000 fights</button>
+      <p class="hint" id="hint">Pick at least one animal to start.</p>
+      <div class="odds" id="odds" aria-live="polite"></div>
+    </aside>
+  </div>
+
+  <section class="report" id="report" aria-live="polite"></section>
+
+  <details class="how">
+    <summary>How the fight works</summary>
+    <p>Every number on the cards comes from the stats sheet: weight ranges, top speed, bite force or primary weapon, intelligence grade, and group dynamic. The game turns those into fight stats with a few fixed rules.</p>
+    <ul>
+      <li><strong>Health</strong> grows with the midpoint of the weight range, with diminishing returns so the biggest animals aren’t untouchable.</li>
+      <li><strong>Attack</strong> also grows with weight, then gets boosted by bite force (more psi, more damage) and by intelligence grade (S is highest, D lowest). Elephants, Cape buffalo, and bison have no bite figure listed, so they get a flat charge-and-horn bonus instead.</li>
+      <li><strong>Speed</strong> decides who arrives first and who strikes first each round.</li>
+      <li><strong>Teamwork:</strong> if you hire two or more animals, each one’s attack rises with its group dynamic (Extreme most, None not at all).</li>
+      <li><strong>Loners:</strong> animals listed as solitary (group dynamic None) or Minimal sometimes lash out at your own teammates.</li>
+      <li><strong>The rest:</strong> enemies arrive two per round, fastest first. Each one sizes up your strongest guard and may back off. Because they’re different species with no reason to cooperate, they sometimes fight each other instead of you.</li>
+      <li><strong>Guarding:</strong> each of your animals can block two attackers per round. If more enemies come at you than your team can block, one gets through and you lose.</li>
+      <li><strong>Terrain:</strong> the crocodile is strong on a riverbank and weak on dry land (the sheet lists it at 18 mph swimming but 8 mph running). The jaguar gains at the river and on high ground, and the cougar gains on high ground, matching their combat profiles.</li>
+    </ul>
+    <p>Each fight has randomness built in, so the 1,000-fight simulation gives a better sense of a team’s real odds than a single run.</p>
+  </details>
+</div>
+
+<script>
+const ANIMALS=[
+{id:'elephant',name:'African Elephant',tier:400,w:11000,wt:'8,000–14,000 lbs',spd:25,spdT:'25 mph',psi:null,wf:1.3,weapon:'Tusks up to 8 ft; massive trampling force',iq:'S',iqT:'Self-aware, tool-user, deep memory',grp:'High',grpT:'Herd communicates via seismic rumblings to form impenetrable defensive rings',prof:'Unstoppable mass. Immune to solo predators; easily flings adversaries and clears terrain.'},
+{id:'rhino',name:'White Rhino',tier:400,w:4250,wt:'3,500–5,000 lbs',spd:30,spdT:'30 mph',psi:800,weapon:'3–5 ft keratin horn; ~800 psi bite',iq:'D',iqT:'Reactive, severely nearsighted',grp:'Low',grpT:'Semi-solitary or loose “crashes”; fights independently',prof:'Armored tank. Devastating frontal momentum and goring power, but easily confused or flanked.'},
+{id:'hippo',name:'Hippo',tier:400,w:3750,wt:'3,000–4,500 lbs',spd:30,spdT:'30 mph (burst)',psi:1950,weapon:'1,900–2,000 psi; 1.5 ft ivory tusks',iq:'C-',iqT:'Territorial, instinct-driven',grp:'Minimal',grpT:'Pods gather densely for territory, but fight as chaotic individuals, not a unit',prof:'Hyper-aggressive territory defender. Can bisect large targets; thick, puncture-resistant hide.'},
+{id:'giraffe',name:'Giraffe',tier:400,w:3400,wt:'2,600–4,200 lbs',spd:35,spdT:'35 mph',psi:2000,weapon:'2,000 psi kick; ossicone head clubs',iq:'C',iqT:'Basic social structures, lookout',grp:'Low',grpT:'Loose herds act as early warning radars, but each defends itself',prof:'High-reach sentry. Delivers 360-degree, bone-shattering hooves; high vantage point thwarts ambushes.'},
+{id:'polar',name:'Polar Bear',tier:300,w:1250,wt:'900–1,600 lbs',spd:25,spdT:'25 mph',psi:1200,weapon:'1,200 psi; 2-inch non-retractable claws',iq:'B+',iqT:'Spatial mapper, calculated tracker',grp:'None',grpT:'Strictly solitary apex hunter',prof:'Heavyweight predator. Thick blubber absorbs impact; engineered to shatter walrus and seal bone.'},
+{id:'croc',name:'Saltwater Crocodile',tier:300,w:1600,wt:'1,000–2,200+ lbs',spd:8,spdT:'18 mph (swim), 8 mph (burst run)',psi:3700,weapon:'3,700 psi; death roll',iq:'B-',iqT:'Pattern recognition, ambush patience',grp:'None',grpT:'Solitary/cannibalistic; purely opportunistic',prof:'Living armored bunker. Unmatched bite force and drowning grapple; dominant in or near water.'},
+{id:'buffalo',name:'Cape Buffalo',tier:300,w:1650,wt:'1,300–2,000 lbs',spd:35,spdT:'35 mph',psi:null,wf:1.25,weapon:'Fused bone horn “boss”; trampling mass',iq:'C+',iqT:'Mob vengeance, democratic voting',grp:'Extreme',grpT:'Herds counter-attack, circle back on predators, and mob threats collectively',prof:'“The Black Death.” Vindictive, exceptionally durable, and capable of brutal charges.'},
+{id:'bison',name:'American Bison',tier:300,w:1600,wt:'1,000–2,200 lbs',spd:35,spdT:'35 mph',psi:null,wf:1.25,weapon:'Curved horns; dense reinforced skull plate',iq:'C',iqT:'Standard herd instincts',grp:'Very High',grpT:'Stampede charges and defensive perimeters protect young and wear down threats',prof:'Shock vanguard. Exceptional straight-line power; heavily muscled hump absorbs direct frontal force.'},
+{id:'grizzly',name:'Grizzly Bear',tier:200,w:600,wt:'400–800+ lbs',spd:35,spdT:'35 mph',psi:1067,weapon:'975–1,160 psi; 4-inch digging claws',iq:'A-',iqT:'Problem solver, versatile brawler',grp:'None',grpT:'Solitary; highly territorial',prof:'Dense muscle and bone framework; feints charges, grapples, and breaks spines with swipe force.'},
+{id:'tiger',name:'Bengal Tiger',tier:200,w:485,wt:'400–570 lbs',spd:40,spdT:'40 mph',psi:1050,weapon:'1,050 psi; 3–4 inch retractable claws',iq:'B+',iqT:'Vocal mimic, terrain strategist',grp:'None',grpT:'Solitary assassin',prof:'Elite solitary stalker. Unmatched balance of stealth, weight, and targeted cervical spine takedowns.'},
+{id:'lion',name:'African Lion',tier:200,w:415,wt:'330–500 lbs',spd:50,spdT:'50 mph (short sprint)',psi:675,weapon:'650–700 psi; grappling claws',iq:'B+',iqT:'Coordinated pack flanker',grp:'Very High',grpT:'Prides operate specialized roles to hold down and suffocate megafauna',prof:'Social big cat. Protective neck mane absorbs bites; relies on cooperative grappling to ground heavy targets.'},
+{id:'gorilla',name:'Silverback Gorilla',tier:200,w:400,wt:'350–450 lbs',spd:25,spdT:'25 mph',psi:1300,weapon:'1,300 psi; explosive arm torque',iq:'S',iqT:'Ape cognition, tool use, tactical deceit',grp:'Moderate',grpT:'Troop males defend families, but solo silverback shoulders primary frontline fighting',prof:'Immense upper-body leverage and bone-cracking bite; psychologically intimidating, though skin is vulnerable to claws.'},
+{id:'jaguar',name:'Jaguar',tier:100,w:200,wt:'150–250 lbs',spd:50,spdT:'50 mph',psi:1500,weapon:'1,500 psi; skull-piercing canines',iq:'B+',iqT:'Surgical anatomy targeting',grp:'None',grpT:'Strictly solitary',prof:'Elite pound-for-pound bite; crushes skulls and armored prey instantly from high ground or water.'},
+{id:'wolf',name:'Gray Wolf',tier:100,w:110,wt:'80–140 lbs',spd:37.5,spdT:'35–40 mph',psi:700,weapon:'400–1,000 psi; slicing canines',iq:'A-',iqT:'Flanking tactics, complex signaling',grp:'Extreme',grpT:'Relay pursuit, flanking diversion, and hamstrings disabling',prof:'Pursuit runner. Wears opponents out over long distances; fragile alone, lethal in a disciplined pack.'},
+{id:'cougar',name:'Cougar',tier:100,w:170,wt:'120–220 lbs',spd:45,spdT:'40–50 mph',psi:400,weapon:'400 psi; 40-foot explosive leap',iq:'B',iqT:'Stealth stalker, cache strategist',grp:'None',grpT:'Solitary ambush predator',prof:'Lethal pouncer from elevation onto an unsuspecting neck; retreats against extended frontal defense.'},
+{id:'hyena',name:'Spotted Hyena',tier:100,w:140,wt:'110–170 lbs',spd:37,spdT:'37 mph',psi:1100,weapon:'1,100 psi; bone-cracking premolars',iq:'A',iqT:'Outperforms chimps in team tests',grp:'Extreme',grpT:'Relentless endurance harassment, gang-tackling, and systematic tendon targeting',prof:'Stamina tank. High pain tolerance, massive bite force, and devastating clan coordination.'}
+];
+const IQ={'S':1.25,'A':1.18,'A-':1.15,'B+':1.12,'B':1.08,'B-':1.05,'C+':1.02,'C':1.0,'C-':0.97,'D':0.92};
+const GRP={'Extreme':1.5,'Very High':1.4,'High':1.3,'Moderate':1.15,'Low':1.05,'Minimal':1.0,'None':1.0};
+const ROGUE={'None':0.06,'Minimal':0.08};
+const TERRAIN={
+ savanna:{name:'Open savanna',mods:{croc:{atk:0.6,spd:8}}},
+ river:{name:'Riverbank',mods:{croc:{atk:1.5,spd:18},jaguar:{atk:1.15}}},
+ ridge:{name:'Rocky high ground',mods:{cougar:{atk:1.3},jaguar:{atk:1.15},croc:{atk:0.6,spd:8}}}
+};
+const HPE=0.45, BLOCKS=2, SYN=0.6, ATKK=8, ATKE=0.33, HPK=5, CHAOS=0.4, FLEE=0.35, PER_ROUND=2;
+function weaponF(a){return a.psi?1+a.psi/4000:a.wf;}
+function baseStats(a,terrain){const m=(TERRAIN[terrain].mods[a.id])||{};const hp=Math.round(HPK*Math.pow(a.w,HPE));const atk=ATKK*Math.pow(a.w,ATKE)*weaponF(a)*IQ[a.iq]*(m.atk||1);return{hp,atk,spd:m.spd||a.spd};}
+function runBattle(teamIds,terrain,R=Math.random,withLog=false){
+ const mk=(a,side)=>{const s=baseStats(a,terrain);return{a,side,hp:s.hp,max:s.hp,atk:s.atk,spd:s.spd};};
+ const team=ANIMALS.filter(a=>teamIds.includes(a.id)).map(a=>mk(a,'team'));
+ if(team.length>=2) team.forEach(u=>u.atk*=1+(GRP[u.a.grp]-1)*SYN);
+ const enemies=ANIMALS.filter(a=>!teamIds.includes(a.id)).map(a=>mk(a,'enemy'));
+ const queue=enemies.map(e=>({e,k:e.spd*(0.75+0.5*R())})).sort((x,y)=>y.k-x.k).map(x=>x.e);
+ const active=[];const rounds=[];let fled=0,killed=0,infight=0;
+ const pick=arr=>arr[Math.floor(R()*arr.length)];
+ for(let round=1;round<=40;round++){
+  const ev=[];const L=(t,c)=>{if(withLog)ev.push({t,c});};
+  for(let i=0;i<PER_ROUND&&queue.length;i++){const e=queue.shift();active.push(e);L(`${e.a.name} arrives.`,'arrive');}
+  const aliveT=team.filter(u=>u.hp>0).map(u=>u.atk).sort((a,b)=>b-a);const threat=aliveT.length?aliveT[0]+0.25*aliveT.slice(1).reduce((s,x)=>s+x,0):0;
+  for(const e of [...active]){ if(threat>0 && e.atk*(0.6+0.8*R())<FLEE*threat){active.splice(active.indexOf(e),1);fled++;L(`${e.a.name} sizes up your team and backs off.`,'flee');}}
+  team.forEach(u=>u.blocks=BLOCKS);
+  const order=[...team.filter(u=>u.hp>0),...active].map(u=>({u,k:u.spd+R()*10})).sort((x,y)=>y.k-x.k).map(x=>x.u);
+  for(const u of order){
+   if(u.hp<=0) continue;
+   let t,kind;
+   if(u.side==='enemy'){
+    if(!active.includes(u)) continue;
+    const others=active.filter(x=>x!==u&&x.hp>0);
+    const alive=team.filter(x=>x.hp>0);
+    if(others.length&&R()<CHAOS){t=pick(others);kind='chaos';infight++;}
+    else if(alive.some(x=>x.blocks>0)){t=pick(alive.filter(x=>x.blocks>0));t.blocks--;kind='hit';}
+    else{L(alive.length?`${u.a.name} slips past your guards and reaches you.`:`${u.a.name} gets past and reaches you.`,'lose');rounds.push({round,ev});return{win:false,round,rounds,team,fled,killed,infight,killer:u.a.name};}
+   } else {
+    const mates=team.filter(x=>x!==u&&x.hp>0);
+    const rc=ROGUE[u.a.grp]||0;
+    if(mates.length&&R()<rc){t=pick(mates);kind='rogue';}
+    else{const tg=active.filter(x=>x.hp>0);if(!tg.length)continue;t=tg.reduce((m,x)=>x.hp<m.hp?x:m);kind='guard';}
+   }
+   const dmg=Math.round(u.atk*(0.7+0.6*R()));t.hp-=dmg;
+   const verb={chaos:`${u.a.name} turns on the ${t.a.name} instead`,hit:`${u.a.name} attacks your ${t.a.name}`,rogue:`Your ${u.a.name} lashes out at your own ${t.a.name}`,guard:`Your ${u.a.name} hits the ${t.a.name}`}[kind];
+   L(`${verb} (${dmg} damage).`,kind);
+   if(t.hp<=0){t.hp=0;if(t.side==='enemy'){active.splice(active.indexOf(t),1);if(kind!=='chaos')killed++;L(`${t.a.name} is out of the fight.`,'down-enemy');}else L(`Your ${t.a.name} is down.`,'down-team');}
+  }
+  rounds.push({round,ev});
+  if(!queue.length&&!active.length) return{win:true,round,rounds,team,fled,killed,infight};
+ }
+ return{win:true,round:40,rounds,team,fled,killed,infight,stalemate:true};
+}
+
+
+const TERRAIN_INFO={savanna:'Flat and dry. No one gets a home advantage, and the crocodile is out of the water.',river:'Water’s edge. The crocodile and jaguar fight at full strength.',ridge:'Rocks and ledges. Cougars and jaguars can pounce from above.'};
+const team=new Set(); let terrain='savanna';
+const $=id=>document.getElementById(id);
+const money=n=>'$'+n.toLocaleString('en-US');
+const spent=()=>[...team].reduce((s,id)=>s+ANIMALS.find(a=>a.id===id).tier,0);
+const IQSHORT=a=>a.iq; const GRPSHORT=a=>a.grp;
+
+function buildRoster(){
+  const r=$('roster');
+  [400,300,200,100].forEach(t=>{
+    const row=document.createElement('section');row.className='tier';row.dataset.t=t;
+    row.setAttribute('aria-label',money(t)+' animals');
+    row.innerHTML=`<div class="band" aria-hidden="true"><span>${money(t)}</span></div><div class="cards"></div>`;
+    const cards=row.querySelector('.cards');
+    ANIMALS.filter(a=>a.tier===t).forEach(a=>{
+      const b=document.createElement('button');b.className='card';b.id='c-'+a.id;b.setAttribute('aria-pressed','false');
+      b.innerHTML=`<span class="tick" aria-hidden="true"></span><h3>${a.name}</h3>
+      <dl class="card-stats">
+        <dt>Weight</dt><dd>${a.wt}</dd>
+        <dt>Speed</dt><dd>${a.spdT}</dd>
+        <dt>Weapon</dt><dd>${a.weapon}</dd>
+        <dt>Brains</dt><dd>${a.iq} <span title="${a.iqT}">(${a.iqT})</span></dd>
+        <dt>Teamwork</dt><dd title="${a.grpT}">${a.grp}</dd>
+      </dl>
+      <p class="prof">${a.prof}</p>
+      <div class="fight-nums" aria-label="Fight stats on current terrain"></div>`;
+      b.addEventListener('click',()=>toggle(a.id));
+      cards.appendChild(b);
+    });
+    r.appendChild(row);
+  });
+}
+function buildTerrain(){
+  const box=$('terrain');
+  Object.entries(TERRAIN).forEach(([k,v])=>{
+    const l=document.createElement('label');
+    l.innerHTML=`<input type="radio" name="terrain" value="${k}" ${k===terrain?'checked':''}><span>${v.name}<small>${TERRAIN_INFO[k]}</small></span>`;
+    l.querySelector('input').addEventListener('change',e=>{terrain=e.target.value;refresh();clearOdds();});
+    box.appendChild(l);
+  });
+}
+function toggle(id){
+  if(team.has(id)) team.delete(id); else team.add(id);
+  refresh(); clearOdds();
+}
+function clearOdds(){$('odds').className='odds';$('odds').innerHTML='';}
+function refresh(){
+  const left=1000-spent();
+  $('amt').textContent=money(left);$('amt').classList.toggle('zero',left===0);
+  ANIMALS.forEach(a=>{
+    const c=$('c-'+a.id), on=team.has(a.id);
+    c.setAttribute('aria-pressed',on);c.querySelector('.tick').textContent=on?'✓':'';
+    c.disabled=!on&&a.tier>left;
+    c.setAttribute('aria-label',`${a.name}, ${money(a.tier)}${on?', on your team':''}`);
+    const s=baseStats(a,terrain);
+    c.querySelector('.fight-nums').innerHTML=`<span>Health ${s.hp}</span><span>Attack ${Math.round(s.atk)}</span>`;
+  });
+  const tl=$('teamList');tl.innerHTML='';
+  if(!team.size){tl.innerHTML='<li class="empty">No one yet. Tap a card to hire.</li>';}
+  ANIMALS.filter(a=>team.has(a.id)).forEach(a=>{
+    const li=document.createElement('li');
+    li.innerHTML=`<span>${a.name} <span style="color:var(--muted)">${money(a.tier)}</span></span>`;
+    const x=document.createElement('button');x.textContent='Remove';x.setAttribute('aria-label','Remove '+a.name);
+    x.addEventListener('click',()=>toggle(a.id));li.appendChild(x);tl.appendChild(li);
+  });
+  const ok=team.size>0;$('runBtn').disabled=!ok;$('simBtn').disabled=!ok;
+  const enemies=16-team.size;
+  $('hint').textContent=ok?`${enemies} animals will come after you.`:'Pick at least one animal to start.';
+}
+
+let timer=null;
+function runFight(){
+  clearTimeout(timer);
+  const res=runBattle([...team],terrain,Math.random,true);
+  const rep=$('report');rep.className='report show';
+  rep.innerHTML=`<div id="verdictSlot" class="pending">The fight is on…</div>
+    <div class="bars" id="bars"></div>
+    <div class="log-head"><h3>Round by round</h3><button class="skip" id="skip">Show the result now</button></div>
+    <ol class="rounds" id="rounds"></ol>`;
+  // health replay: rebuild per-round health by replaying events is complex, so show final health after reveal
+  const teamUnits=res.team;
+  const list=$('rounds');
+  let i=0;
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const addRound=()=>{
+    const r=res.rounds[i++];
+    const li=document.createElement('li');
+    li.innerHTML=`<h4>Round ${r.round}</h4><ul>${r.ev.map(e=>`<li class="e-${e.c}">${e.t}</li>`).join('')}</ul>`;
+    list.appendChild(li);
+  };
+  const finish=()=>{
+    clearTimeout(timer);
+    while(i<res.rounds.length) addRound();
+    $('skip').remove();
+    const v=$('verdictSlot');v.className='verdict '+(res.win?'win':'lose');
+    const standing=teamUnits.filter(u=>u.hp>0).length;
+    v.innerHTML=res.win
+      ?`<h2>You survived</h2><p>Over ${res.round} rounds, your team defeated ${res.killed} and scared off ${res.fled}${(16-teamUnits.length-res.killed-res.fled)>0?`, and ${16-teamUnits.length-res.killed-res.fled} went down fighting each other`:''}. ${standing} of ${teamUnits.length} of your animals ${standing===1?'is':'are'} still standing.</p>`
+      :`<h2>You didn’t make it</h2><p>In round ${res.round}, the ${res.killer} reached you. Your team defeated ${res.killed} and scared off ${res.fled} before that.</p>`;
+    $('bars').innerHTML=teamUnits.map(u=>`<div class="bar ${u.hp<=0?'dead':''}"><div>${u.a.name}: ${u.hp<=0?'down':Math.round(u.hp)+' / '+u.max+' health'}</div><div class="track"><div class="fill" style="width:${Math.max(0,u.hp/u.max*100)}%"></div></div></div>`).join('');
+  };
+  $('skip').addEventListener('click',finish);
+  if(reduce){finish();}
+  else{
+    const step=()=>{ if(i<res.rounds.length){addRound();timer=setTimeout(step,450);} else finish(); };
+    step();
+  }
+  rep.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
+}
+function simulate(){
+  const N=1000;let w=0,rounds=0;
+  for(let k=0;k<N;k++){const r=runBattle([...team],terrain);if(r.win)w++;rounds+=r.round;}
+  const pct=Math.round(w/N*1000)/10;
+  const o=$('odds');o.className='odds show';
+  o.innerHTML=`<div class="pct">${pct}%</div><p>This team survived ${w.toLocaleString('en-US')} of ${N.toLocaleString('en-US')} fights on ${TERRAIN[terrain].name.toLowerCase()}. Fights lasted ${(rounds/N).toFixed(1)} rounds on average.</p>`;
+}
+$('runBtn').addEventListener('click',runFight);
+$('simBtn').addEventListener('click',simulate);
+buildRoster();buildTerrain();refresh();
+</script>
+</body>
+</html>
